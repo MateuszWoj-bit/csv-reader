@@ -56,7 +56,7 @@ json_data = [json.dumps(row) for row in data]
 # part 9
 from openai import OpenAI
 client = OpenAI(
-  api_key="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"
+  api_key="OpenAI_API_KEY"
 )
 embedded_data = client.embeddings.create(input=json_data, model="text-embedding-ada-002") ['data']
 
