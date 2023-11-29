@@ -53,3 +53,39 @@ db_connection = create_engine(connection_url).connect()
 # part 8
 json_data = [json.dumps(row) for row in data]
 
+# part 9
+from openai import OpenAI
+client = OpenAI(
+  api_key="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"
+)
+embedded_data = client.embeddings.create(input=json_data, model="text-embedding-ada-002") ['data']
+
+# part 10
+combined_data = [tuple(row) + (embedded['embedding'],) for embedded, row in zip(embedded_data, data)]
+
+# part 11
+%sql TRUNCATE TABLE news.news_articles
+
+statement = '''
+    INSERT INTO news.news_articles (
+        title,
+        description,
+        label,
+        embedding
+    )
+    VALUES (
+        %s,
+        %s,
+        %s,
+        JSON_ARRAY_PACK(%s)
+    );
+'''
+
+for i, row in enumerate(combined_data):
+    try:
+        title, description, label, embedding = row
+        values = (title, description, label, json.dumps(embedding))
+        db_connection.exec_driver_sql(statement, values)
+    except Exception as e:
+        print('Error inserting row {}: {}'.format(i, e))
+
